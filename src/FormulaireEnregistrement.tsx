@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useApp } from "./App";
+import { useApp, type AppView } from "./App";
 import "./FormulaireEnregistrement.css";
 import { enregistrementService } from "./api/enregistrementService";
 import type { Enregistrement } from "./data";
@@ -207,7 +207,7 @@ function FormField({ label, value, onChange, placeholder = "", type = "text", fu
   );
 }
 
-function Sidebar({ setView }: { setView: (v: string) => void }) {
+function Sidebar({ setView }: { setView: (v: AppView) => void }) {
   return (
     <aside className="form-sidebar">
       <div className="sidebar-logo">

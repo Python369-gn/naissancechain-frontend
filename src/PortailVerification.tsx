@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { useApp } from "./App";
+import { useApp, type AppView } from "./App";
 import { enregistrementService } from "./api/enregistrementService";
 import { parseQRData } from "./utils/qrUtils";
 import type { Enregistrement } from "./data";
 
 import { Html5Qrcode } from "html5-qrcode";
+import jsQR from "jsqr";
 import { useAuth } from "./context/AuthContext";
 import "./PortailVerification.css";
 
@@ -80,7 +81,7 @@ export default function PortailVerification() {
         return;
       }
 
-      if (parsed) {
+      if (typeof parsed === "string") {
         const found = await enregistrementService.getByNiu(parsed);
         if (found) {
           setScanState("done");
@@ -101,10 +102,9 @@ export default function PortailVerification() {
     // Give React time to render the 'qr-reader-target' div
     setTimeout(async () => {
       try {
-        if (!window.Html5Qrcode) throw new Error("Scanner non chargé");
         if (scannerRef.current) await scannerRef.current.stop().catch(() => {});
 
-        const scanner = new window.Html5Qrcode("qr-reader-target");
+        const scanner = new Html5Qrcode("qr-reader-target");
         scannerRef.current = scanner;
 
         const config = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
@@ -135,7 +135,7 @@ export default function PortailVerification() {
     const parsed = parseQRData(manualNIU);
     if (!parsed) return;
     try {
-      const niuToSearch = typeof parsed === 'string' ? parsed : parsed.niu;
+      const niuToSearch = typeof parsed === 'string' ? parsed : (parsed as Enregistrement).niu;
       if (!niuToSearch) throw new Error("NIU invalide");
       const found = await enregistrementService.getByNiu(niuToSearch);
       if (found) { setRecord(found); addHistory(found); setMode("result"); }
@@ -159,12 +159,12 @@ export default function PortailVerification() {
       img.onload = () => {
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
-        if (ctx && window.jsQR) {
+        if (ctx) {
           canvas.width = img.width;
           canvas.height = img.height;
           ctx.drawImage(img, 0, 0, img.width, img.height);
           const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const code = window.jsQR(imageData.data, imageData.width, imageData.height);
+          const code = jsQR(imageData.data, imageData.width, imageData.height);
           
           try {
             if (code && code.data) {
@@ -410,7 +410,7 @@ export default function PortailVerification() {
   );
 }
 
-function VPNav({ setView, org, onLogout }: { setView: (v: any) => void; org?: string; onLogout?: () => void }) {
+function VPNav({ setView, org, onLogout }: { setView: (v: AppView) => void; org?: string; onLogout?: () => void }) {
   return (
     <header className="vp-nav">
       <div className="vp-nav-left">

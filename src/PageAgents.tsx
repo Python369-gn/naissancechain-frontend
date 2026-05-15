@@ -34,7 +34,7 @@ export default function PageAgents() {
     return (
       (prefFilter === "TOUTES" || a.prefecture === prefFilter) &&
       (statutFilter === "TOUS" || a.statut === statutFilter) &&
-      (q === "" || a.nom.toLowerCase().includes(q) || a.prenom.toLowerCase().includes(q) || a.id.toLowerCase().includes(q))
+      (q === "" || a.nom.toLowerCase().includes(q) || a.prenom.toLowerCase().includes(q) || (a.id || "").toLowerCase().includes(q))
     );
   }), [agents, search, prefFilter, statutFilter]);
 
@@ -113,7 +113,7 @@ export default function PageAgents() {
             <div
               key={agent.id}
               className={`agent-card ${selected === agent.id ? "selected" : ""}`}
-              onClick={() => setSelected(selected === agent.id ? null : agent.id)}
+              onClick={() => setSelected(selected === agent.id ? null : (agent.id || null))}
             >
               <div className="agent-card-top">
                 <div className={`agent-avatar-card ${agent.statut === "ACTIF" ? "" : "inactive"}`}>{agent.avatar}</div>
@@ -127,7 +127,7 @@ export default function PageAgents() {
               </div>
               <div className="agent-card-stats">
                 <div className="agent-card-stat">
-                  <span className="agent-stat-num">{agent.enregistrements}</span>
+                  <span className="agent-stat-num">{agent.enregistrements || 0}</span>
                   <span className="agent-stat-label">Enreg.</span>
                 </div>
                 <div className="agent-card-stat-div" />
@@ -214,11 +214,11 @@ export default function PageAgents() {
 
               <div className="agent-detail-kpi">
                 <div className="agent-kpi-box">
-                  <div className="agent-kpi-num">{selectedAgent.enregistrements}</div>
+                  <div className="agent-kpi-num">{selectedAgent.enregistrements || 0}</div>
                   <div className="agent-kpi-lbl">Enregistrements</div>
                 </div>
                 <div className="agent-kpi-box yellow">
-                  <div className="agent-kpi-num">{Math.round(selectedAgent.enregistrements / 12)}</div>
+                  <div className="agent-kpi-num">{Math.round((selectedAgent.enregistrements || 0) / 12)}</div>
                   <div className="agent-kpi-lbl">/ mois (moy.)</div>
                 </div>
               </div>

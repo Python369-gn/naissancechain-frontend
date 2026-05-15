@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { Html5Qrcode } from "html5-qrcode";
 import "./pages.css";
 import "./PortailNational.css";
 import { useApp } from "./App";
@@ -11,12 +12,7 @@ import { enregistrementService } from "./api/enregistrementService";
 import { parseQRData } from "./utils/qrUtils";
 import type { Enregistrement } from "./data";
 
-declare global {
-  interface Window {
-    jsQR: any;
-    Html5Qrcode: any;
-  }
-}
+// Global window properties are defined in src/types/globals.d.ts
 
 export default function PortailNational() {
   const { setView } = useApp();
@@ -52,7 +48,7 @@ export default function PortailNational() {
   const [quickSearch, setQuickSearch] = useState("");
   const [quickResult, setQuickResult] = useState<Enregistrement | null>(null);
   const [scanState, setScanState] = useState<"idle" | "scanning" | "done" | "error">("idle");
-  const scannerRef = useRef<any>(null);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -81,7 +77,7 @@ export default function PortailNational() {
       const found = await enregistrementService.search(quickSearch);
       if (found.length > 0) setQuickResult(found[0]);
       else alert("Aucun acte trouvé");
-    } catch (e) {
+    } catch {
       alert("Erreur de recherche");
     }
   };
@@ -93,8 +89,9 @@ export default function PortailNational() {
       setQuickResult(updated);
       setRecentRecords(prev => prev.map(r => r.niu === updated.niu ? updated : r));
       alert(`Acte ${statusUpdate === 'VALIDÉ' ? 'approuvé' : 'rejeté'} avec succès.`);
-    } catch (err: any) {
-      alert("Erreur lors de la mise à jour: " + (err.response?.data?.message || err.message));
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      alert("Erreur lors de la mise à jour: " + (error.response?.data?.message || error.message));
     }
   };
 
@@ -111,10 +108,9 @@ export default function PortailNational() {
           return;
         }
 
-        if (!window.Html5Qrcode) throw new Error("Scanner non chargé");
         if (scannerRef.current) await scannerRef.current.stop().catch(() => {});
 
-        const scanner = new window.Html5Qrcode("dashboard-qr-target");
+        const scanner = new Html5Qrcode("dashboard-qr-target");
         scannerRef.current = scanner;
 
         const config = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
@@ -122,12 +118,12 @@ export default function PortailNational() {
         await scanner.start(
           { facingMode: "environment" },
           config,
-          (text) => {
+          (text: string) => {
             scanner.stop().then(async () => {
               const parsed = parseQRData(text);
               if (typeof parsed === "object" && parsed !== null) {
                 setQuickResult(parsed as Enregistrement);
-              } else if (parsed) {
+              } else if (typeof parsed === "string") {
                 const found = await enregistrementService.getByNiu(parsed);
                 if (found) setQuickResult(found);
               }

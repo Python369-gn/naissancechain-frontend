@@ -42,8 +42,9 @@ export default function PageEnregistrements() {
       const updated = await enregistrementService.updateStatus(selectedRecord.niu, statusUpdate);
       setRecords(prev => prev.map(r => r.niu === updated.niu ? updated : r));
       alert(`Acte ${statusUpdate === 'VALIDÉ' ? 'approuvé' : 'rejeté'} avec succès.`);
-    } catch (err: any) {
-      alert("Erreur lors de la mise à jour: " + (err.response?.data?.message || err.message));
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } }, message?: string };
+      alert("Erreur lors de la mise à jour: " + (error.response?.data?.message || error.message));
     } finally {
       setActionLoading(false);
     }

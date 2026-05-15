@@ -8,6 +8,7 @@ import type { Enregistrement, Agent } from "./data";
 import { useAuth } from "./context/AuthContext";
 
 import { Html5Qrcode } from "html5-qrcode";
+import jsQR from "jsqr";
 
 export default function PageVerification() {
   const [query, setQuery] = useState("");
@@ -83,7 +84,7 @@ export default function PageVerification() {
         return;
       }
 
-      if (parsed) {
+      if (typeof parsed === "string") {
         const found = await enregistrementService.getByNiu(parsed);
         if (found) {
           setScanState("done");
@@ -110,10 +111,9 @@ export default function PageVerification() {
 
     setTimeout(async () => {
       try {
-        if (!window.Html5Qrcode) throw new Error("Scanner non chargé");
         if (scannerRef.current) await scannerRef.current.stop().catch(() => {});
 
-        const scanner = new window.Html5Qrcode("qr-reader-target-page");
+        const scanner = new Html5Qrcode("qr-reader-target-page");
         scannerRef.current = scanner;
 
         const config = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
@@ -154,12 +154,12 @@ export default function PageVerification() {
       img.onload = () => {
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
-        if (ctx && window.jsQR) {
+        if (ctx) {
           canvas.width = img.width;
           canvas.height = img.height;
           ctx.drawImage(img, 0, 0, img.width, img.height);
           const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const code = window.jsQR(imageData.data, imageData.width, imageData.height);
+          const code = jsQR(imageData.data, imageData.width, imageData.height);
           
           if (code && code.data) {
             setScanProgress(100);

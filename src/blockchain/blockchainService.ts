@@ -102,7 +102,9 @@ class BlockchainFrontendService {
    */
   async connectReadOnly(): Promise<void> {
     const rpcUrl = import.meta.env.VITE_RPC_URL || "http://127.0.0.1:8545";
-    this.provider = new BrowserProvider(window.ethereum || rpcUrl as unknown as typeof window.ethereum);
+    if (window.ethereum) {
+      this.provider = new BrowserProvider(window.ethereum as any);
+    }
 
     const readOnlyProvider = new ethers.JsonRpcProvider(rpcUrl);
     this._initContract(readOnlyProvider);
@@ -262,7 +264,7 @@ class BlockchainFrontendService {
    */
   onAccountChange(callback: (accounts: string[]) => void): void {
     if (window.ethereum) {
-      window.ethereum.on("accountsChanged", callback);
+      window.ethereum.on("accountsChanged", callback as any);
     }
   }
 

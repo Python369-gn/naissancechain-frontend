@@ -30,13 +30,13 @@ export default function PagePrefectures() {
     load();
   }, []);
 
-  const sorted = useMemo(() => [...prefectures].sort((a, b) => b[sortBy] - a[sortBy]), [prefectures, sortBy]);
-  const max = useMemo(() => prefectures.length > 0 ? Math.max(...prefectures.map((p) => p.enregistrements)) : 1, [prefectures]);
+  const sorted = useMemo(() => [...prefectures].sort((a, b) => (b[sortBy] || 0) - (a[sortBy] || 0)), [prefectures, sortBy]);
+  const max = useMemo(() => prefectures.length > 0 ? Math.max(...prefectures.map((p) => p.enregistrements || 0)) : 1, [prefectures]);
   const selectedPref = useMemo(() => selected ? prefectures.find((p) => p.nom === selected) : null, [prefectures, selected]);
   const prefRecords = useMemo(() => selected ? records.filter((e) => e.prefecture === selected) : [], [records, selected]);
 
-  const totalEnreg = useMemo(() => prefectures.reduce((s, p) => s + p.enregistrements, 0), [prefectures]);
-  const avgCouverture = useMemo(() => prefectures.length > 0 ? Math.round(prefectures.reduce((s, p) => s + p.couverture, 0) / prefectures.length) : 0, [prefectures]);
+  const totalEnreg = useMemo(() => prefectures.reduce((s, p) => s + (p.enregistrements || 0), 0), [prefectures]);
+  const avgCouverture = useMemo(() => prefectures.length > 0 ? Math.round(prefectures.reduce((s, p) => s + (p.couverture || 0), 0) / prefectures.length) : 0, [prefectures]);
 
   if (loading) return <div className="page-container">Chargement des statistiques...</div>;
 
@@ -78,11 +78,11 @@ export default function PagePrefectures() {
           <div className="pref-kpi-label">Couverture Moyenne</div>
         </div>
         <div className="pref-kpi-card yellow">
-          <div className="pref-kpi-num">{prefectures.reduce((s, p) => s + p.agents, 0)}</div>
+          <div className="pref-kpi-num">{prefectures.reduce((s, p) => s + (p.agents || 0), 0)}</div>
           <div className="pref-kpi-label">Agents Actifs</div>
         </div>
         <div className="pref-kpi-card dark">
-          <div className="pref-kpi-num">{prefectures.filter((p) => p.couverture >= 60).length}</div>
+          <div className="pref-kpi-num">{prefectures.filter((p) => (p.couverture || 0) >= 60).length}</div>
           <div className="pref-kpi-label">Préf. au-dessus 60%</div>
         </div>
       </div>
@@ -103,20 +103,20 @@ export default function PagePrefectures() {
                   <div className="pref-bar-top">
                     <span className="pref-bar-name">{p.nom}</span>
                     <div className="pref-bar-stats">
-                      <span className="pref-stat-chip enreg">{p.enregistrements.toLocaleString()} enreg.</span>
-                      <span className={`pref-stat-chip couv ${p.couverture >= 70 ? "high" : p.couverture >= 50 ? "mid" : "low"}`}>{p.couverture}%</span>
-                      <span className={`pref-trend ${p.tendance > 10 ? "up-high" : "up"}`}>▲ {p.tendance}%</span>
+                      <span className="pref-stat-chip enreg">{(p.enregistrements || 0).toLocaleString()} enreg.</span>
+                      <span className={`pref-stat-chip couv ${(p.couverture || 0) >= 70 ? "high" : (p.couverture || 0) >= 50 ? "mid" : "low"}`}>{(p.couverture || 0)}%</span>
+                      <span className={`pref-trend ${(p.tendance || 0) > 10 ? "up-high" : "up"}`}>▲ {(p.tendance || 0)}%</span>
                     </div>
                   </div>
                   <div className="pref-bar-track">
                     <div
                       className="pref-bar-fill"
-                      style={{ width: `${(p.enregistrements / max) * 100}%`, background: p.couleur }}
+                      style={{ width: `${((p.enregistrements || 0) / max) * 100}%`, background: p.couleur }}
                     />
                   </div>
                   <div className="pref-bar-bottom">
-                    <span className="pref-agents-count">👥 {p.agents} agents</span>
-                    <span className="pref-pop">Pop. {(p.population / 1_000_000).toFixed(1)}M</span>
+                    <span className="pref-agents-count">👥 {p.agents || 0} agents</span>
+                    <span className="pref-pop">Pop. {((p.population || 0) / 1_000_000).toFixed(1)}M</span>
                   </div>
                 </div>
               </div>
@@ -141,24 +141,24 @@ export default function PagePrefectures() {
                 <circle
                   cx="60" cy="60" r="48" fill="none"
                   stroke={selectedPref.couleur} strokeWidth="12"
-                  strokeDasharray={`${2 * Math.PI * 48 * selectedPref.couverture / 100} ${2 * Math.PI * 48 * (1 - selectedPref.couverture / 100)}`}
+                  strokeDasharray={`${2 * Math.PI * 48 * (selectedPref.couverture ?? 0) / 100} ${2 * Math.PI * 48 * (1 - (selectedPref.couverture ?? 0) / 100)}`}
                   strokeLinecap="round"
                   transform="rotate(-90 60 60)"
                 />
-                <text x="60" y="56" textAnchor="middle" fontSize="18" fontWeight="800" fill="#0B3D2E">{selectedPref.couverture}%</text>
+                <text x="60" y="56" textAnchor="middle" fontSize="18" fontWeight="800" fill="#0B3D2E">{selectedPref.couverture ?? 0}%</text>
                 <text x="60" y="72" textAnchor="middle" fontSize="8" fill="#888">COUVERTURE</text>
               </svg>
             </div>
 
             <div className="pref-detail-stats">
-              <div className="pref-ds-row"><span>Enregistrements</span><strong>{selectedPref.enregistrements.toLocaleString()}</strong></div>
-              <div className="pref-ds-row"><span>Population estimée</span><strong>{selectedPref.population.toLocaleString()}</strong></div>
-              <div className="pref-ds-row"><span>Agents actifs</span><strong>{selectedPref.agents}</strong></div>
-              <div className="pref-ds-row"><span>Tendance mensuelle</span><strong className="trend-up">▲ {selectedPref.tendance}%</strong></div>
+              <div className="pref-ds-row"><span>Enregistrements</span><strong>{(selectedPref.enregistrements ?? 0).toLocaleString()}</strong></div>
+              <div className="pref-ds-row"><span>Population estimée</span><strong>{(selectedPref.population ?? 0).toLocaleString()}</strong></div>
+              <div className="pref-ds-row"><span>Agents actifs</span><strong>{selectedPref.agents ?? 0}</strong></div>
+              <div className="pref-ds-row"><span>Tendance mensuelle</span><strong className="trend-up">▲ {selectedPref.tendance ?? 0}%</strong></div>
               <div className="pref-ds-row"><span>Objectif 2028</span><strong>95%</strong></div>
               <div className="pref-ds-row">
                 <span>Écart objectif</span>
-                <strong className="trend-warn">{95 - selectedPref.couverture}% restants</strong>
+                <strong className="trend-warn">{95 - (selectedPref.couverture ?? 0)}% restants</strong>
               </div>
             </div>
 
