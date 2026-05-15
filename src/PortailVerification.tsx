@@ -135,7 +135,9 @@ export default function PortailVerification() {
     const parsed = parseQRData(manualNIU);
     if (!parsed) return;
     try {
-      const found = await enregistrementService.getByNiu(parsed);
+      const niuToSearch = typeof parsed === 'string' ? parsed : parsed.niu;
+      if (!niuToSearch) throw new Error("NIU invalide");
+      const found = await enregistrementService.getByNiu(niuToSearch);
       if (found) { setRecord(found); addHistory(found); setMode("result"); }
       else { setResults([]); setMode("search"); }
     } catch {
@@ -408,7 +410,7 @@ export default function PortailVerification() {
   );
 }
 
-function VPNav({ setView, org, onLogout }: { setView: (v: string) => void; org?: string; onLogout?: () => void }) {
+function VPNav({ setView, org, onLogout }: { setView: (v: any) => void; org?: string; onLogout?: () => void }) {
   return (
     <header className="vp-nav">
       <div className="vp-nav-left">
