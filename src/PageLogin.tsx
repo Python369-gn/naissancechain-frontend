@@ -36,10 +36,6 @@ export default function PageLogin({ onNavigate }: { onNavigate: (view: any) => v
               La plateforme souveraine de gestion de l'état civil en République de Guinée. 
               Sécurisé par la blockchain, accessible à tous.
             </p>
-            <div className="auth-branding-footer">
-              <span>© 2026 État Civil Guinéen</span>
-              <span>Propulsé par Sovereign Ledger</span>
-            </div>
           </div>
         </div>
 
